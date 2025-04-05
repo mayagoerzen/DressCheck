@@ -107,8 +107,14 @@ export default function OutfitUpload() {
       sessionStorage.setItem('complianceResult', JSON.stringify(data));
       sessionStorage.setItem('uploadedImage', imagePreview || '');
       
-      // Navigate to results page
-      navigate(`/results/${industry}`);
+      // Navigate to results page with debugging
+      console.log("Navigation to results with industry:", industry);
+      console.log("Navigation path:", `/results/${industry}`);
+      
+      // Use a small timeout to ensure state updates are processed first
+      setTimeout(() => {
+        navigate(`/results/${industry}`);
+      }, 100);
     },
     onError: (error) => {
       toast({

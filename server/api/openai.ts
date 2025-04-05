@@ -8,7 +8,10 @@ import type {
 import { IndustryType, ComplianceCheckResponse } from "@shared/schema";
 
 // the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+// Initialize OpenAI client only if API key is available
+const openai = process.env.OPENAI_API_KEY 
+  ? new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
+  : null;
 
 // Industry-specific rules to check against
 const industryRules = {
@@ -63,7 +66,7 @@ const industryRules = {
 import { getMockComplianceResponse } from "./mock-data";
 
 // Environment variable to control whether to use the real API or mock data
-const USE_MOCK_DATA = process.env.USE_MOCK_DATA === "true" || true; // Default to true for now due to quota issues
+const USE_MOCK_DATA = process.env.USE_MOCK_DATA === "true" || false; // Setting to false to use real OpenAI API
 
 export async function analyzeOutfitCompliance(
   industry: IndustryType,
@@ -84,13 +87,38 @@ export async function analyzeOutfitCompliance(
   
   // Otherwise use the actual OpenAI API
   try {
-    const systemContent = `You are a dress code compliance expert for the ${industry} industry. 
-    Analyze the outfit and determine if it meets industry standards.
-    ${industry === "healthcare" 
-      ? "For healthcare, check for: scrubs/medical uniform, closed-toe shoes, ID badge, hair containment, no excessive jewelry, no long nails." 
-      : "For construction, check for: hard hat, high-visibility clothing, safety boots, eye protection, appropriate workwear, no loose clothing, no jewelry."}
+    const systemContent = `You are a specialized dress code compliance expert for the ${industry} industry with extensive professional experience in workplace safety standards and regulations.
     
-    Provide a detailed analysis and recommendations to fix any compliance issues.
+    ${industry === "healthcare" 
+      ? `For healthcare, meticulously check for:
+        - Medical uniform/scrubs standards (color, fit, cleanliness, condition)
+        - Proper footwear (closed-toe, non-slip, clean, professional)
+        - ID badge placement and visibility
+        - Hair containment and coverage requirements
+        - Jewelry restrictions (minimal, secure, non-dangling)
+        - Nail length and polish regulations
+        - PPE requirements for specific roles (masks, gloves, eye protection)
+        - Professional appearance standards`
+      : `For construction, thoroughly check for:
+        - Hard hat requirements (type, condition, proper wear)
+        - High-visibility clothing standards (class rating, reflective elements, condition)
+        - Safety footwear specifications (steel/composite toe, ankle support, condition)
+        - Eye protection requirements and standards
+        - Hand protection appropriate for tasks
+        - Hearing protection when required
+        - Fall protection harness requirements
+        - Proper work clothing (no loose items, proper coverage, flame-resistant when needed)
+        - Weather-appropriate layers that maintain safety standards`}
+    
+    Analysis Instructions:
+    1. Examine all provided images carefully, looking for both visible and missing elements
+    2. Consider context-specific requirements based on apparent work environment
+    3. Distinguish between critical safety violations and minor issues
+    4. Base your assessment on current industry standards, OSHA regulations, and proven safety best practices
+    
+    Provide detailed, actionable recommendations with specific product types or standards when possible.
+    Explain the safety rationale behind each recommendation.
+    
     Respond with JSON in this format: 
     {
       "isCompliant": boolean,
@@ -150,6 +178,11 @@ export async function analyzeOutfitCompliance(
       throw new Error("Either image or description must be provided");
     }
 
+    // Ensure OpenAI client exists
+    if (!openai) {
+      throw new Error("OpenAI client is not initialized. Please provide an API key.");
+    }
+    
     const response = await openai.chat.completions.create({
       model: "gpt-4o",
       messages: messages,

@@ -1,13 +1,11 @@
-import { Switch, Route, Link } from "wouter";
+import { Switch, Route } from "wouter";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
-import { Shirt, Settings } from "lucide-react";
 import NotFound from "@/pages/not-found";
 import IndustrySelection from "@/pages/industry-selection";
 import OutfitUpload from "@/pages/outfit-upload";
 import Results from "@/pages/results";
-import SettingsPage from "@/pages/settings";
 
 function Router() {
   return (
@@ -15,7 +13,6 @@ function Router() {
       <Route path="/" component={IndustrySelection} />
       <Route path="/upload/:industry" component={OutfitUpload} />
       <Route path="/results/:industry" component={Results} />
-      <Route path="/settings" component={SettingsPage} />
       <Route component={NotFound} />
     </Switch>
   );
@@ -33,19 +30,8 @@ function App() {
                 <h1 className="text-2xl font-bold text-gray-900">Outfit Compliance Checker</h1>
                 <p className="text-gray-600 mt-1">Verify your attire meets industry standards</p>
               </div>
-              <div className="flex items-center">
-                <Link href="/settings" className="flex items-center mr-4 text-gray-600 hover:text-primary transition-colors">
-                  <Settings className="w-5 h-5 mr-1" />
-                  <span className="hidden sm:inline">Settings</span>
-                </Link>
-                <Link href="/" className="flex items-center">
-                  <div className="bg-gradient-to-r from-blue-600 to-blue-400 text-white p-3 rounded-lg shadow-md mr-3">
-                    <Shirt className="w-5 h-5" />
-                  </div>
-                  <div className="font-bold text-xl bg-gradient-to-r from-blue-700 to-blue-500 text-transparent bg-clip-text">
-                    Dress Check
-                  </div>
-                </Link>
+              <div className="bg-primary text-white p-3 rounded-lg shadow-md">
+                <i className="fas fa-check-circle text-xl"></i>
               </div>
             </div>
           </header>

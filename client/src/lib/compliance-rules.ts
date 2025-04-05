@@ -10,7 +10,6 @@ export const industryRules: Record<IndustryType, IndustryRules> = {
       "ID badge",
       "clean uniform",
       "hair containment (if applicable)",
-      "face mask or respirator",
     ],
     prohibitedItems: [
       "open-toed shoes",
@@ -18,22 +17,20 @@ export const industryRules: Record<IndustryType, IndustryRules> = {
       "long nails",
       "strong perfume/cologne",
       "casual clothing (jeans, t-shirts)",
-      "damaged or soiled PPE",
     ],
   },
   construction: {
     requiredItems: [
-      "hard hat or safety helmet",
+      "hard hat",
       "high-visibility vest or clothing",
-      "safety boots or protective footwear",
+      "safety boots or shoes",
       "eye protection",
       "appropriate workwear (pants, long-sleeve shirts)",
     ],
     prohibitedItems: [
       "loose clothing",
       "jewelry",
-      "regular sneakers or athletic shoes",
-      "sandals or open-toed footwear",
+      "sandals or casual shoes",
       "shorts (on most sites)",
       "damaged protective equipment",
     ],
@@ -50,10 +47,10 @@ export const industryConfig: IndustryConfigMap = {
     bgColor: "bg-healthcare",
     borderHover: "hover:border-healthcare",
     features: [
-      "Scrubs, lab coats, medical uniforms, masks",
-      "PPE, hygiene standards, closed-toe footwear"
+      "Scrubs, lab coats, medical uniforms",
+      "PPE, hygiene standards, footwear"
     ],
-    placeholder: "Example: I'm wearing blue scrubs, a surgical mask, white sneakers, a stethoscope, and have my ID badge clipped to my shirt pocket.",
+    placeholder: "Example: I'm wearing blue scrubs, white sneakers, a stethoscope, and have my ID badge clipped to my shirt pocket.",
   },
   construction: {
     title: "Construction",
@@ -63,9 +60,9 @@ export const industryConfig: IndustryConfigMap = {
     bgColor: "bg-construction",
     borderHover: "hover:border-construction",
     features: [
-      "Hard hats/safety helmets, high-vis clothing",
-      "Steel-toe/safety boots, eye protection"
+      "Hard hats, safety vests, protective gear",
+      "Safety footwear, gloves, eye protection"
     ],
-    placeholder: "Example: I'm wearing a yellow hard hat, high-visibility vest, steel-toe safety boots, jeans, and safety glasses.",
+    placeholder: "Example: I'm wearing a yellow hard hat, high-visibility vest, work boots, jeans, and safety glasses.",
   }
 };

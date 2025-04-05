@@ -1,5 +1,6 @@
 import * as React from "react";
 import { cn } from "@/lib/utils";
+import { Loader2 } from "lucide-react";
 
 export interface FileInputProps
   extends React.InputHTMLAttributes<HTMLInputElement> {
@@ -7,10 +8,11 @@ export interface FileInputProps
   preview?: string;
   onRemoveFile?: () => void;
   children?: React.ReactNode;
+  isCompressing?: boolean;
 }
 
 const FileInput = React.forwardRef<HTMLInputElement, FileInputProps>(
-  ({ className, onFileChange, preview, onRemoveFile, children, ...props }, ref) => {
+  ({ className, onFileChange, preview, onRemoveFile, children, isCompressing = false, ...props }, ref) => {
     const inputRef = React.useRef<HTMLInputElement>(null);
     const containerRef = React.useRef<HTMLDivElement>(null);
     
@@ -56,7 +58,7 @@ const FileInput = React.forwardRef<HTMLInputElement, FileInputProps>(
         onDragLeave={handleDragLeave}
         onDrop={handleDrop}
         className={cn(
-          "border-2 border-dashed rounded-lg p-8 bg-gray-50 text-center cursor-pointer transition-colors",
+          "border-2 border-dashed rounded-lg p-8 bg-gray-50 text-center cursor-pointer transition-colors relative",
           dragActive ? "bg-gray-100" : "hover:bg-gray-100",
           className
         )}
@@ -103,18 +105,16 @@ const FileInput = React.forwardRef<HTMLInputElement, FileInputProps>(
             )
           )}
         </div>
+        {isCompressing && (
+          <div className="absolute inset-0 flex items-center justify-center bg-white bg-opacity-75 rounded-lg z-10">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            <span className="ml-2 text-sm font-medium">Compressing image...</span>
+          </div>
+        )}
         <input
           type="file"
           className="hidden"
-          ref={(el) => {
-            // Assign to both refs
-            if (typeof ref === "function") {
-              ref(el);
-            } else if (ref) {
-              ref.current = el;
-            }
-            inputRef.current = el;
-          }}
+          ref={inputRef}
           onChange={handleChange}
           {...props}
         />

@@ -9,26 +9,32 @@ import { apiRequest } from "@/lib/queryClient";
 import { NavigationBreadcrumb } from "@/components/navigation-breadcrumb";
 import { IndustryType } from "@shared/schema";
 import { FaUserMd, FaHardHat, FaImage, FaAlignLeft, FaArrowRight } from "react-icons/fa";
+import { useImageUpload } from "@/hooks/use-image-upload";
 
 export default function OutfitUpload() {
   const { industry } = useParams<{ industry: IndustryType }>();
   const [_, navigate] = useLocation();
   const { toast } = useToast();
   
-  const [uploadedImage, setUploadedImage] = useState<File | null>(null);
-  const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [description, setDescription] = useState("");
   const [isValidIndustry, setIsValidIndustry] = useState(false);
   
+  // Use our enhanced image upload hook with compression
+  const { 
+    file: uploadedImage, 
+    preview: imagePreview, 
+    error: imageError,
+    handleFileChange,
+    removeFile: handleRemoveFile,
+    isCompressing
+  } = useImageUpload({
+    maxSizeMB: 5,
+    acceptedFormats: ['image/jpeg', 'image/png', 'image/heic']
+  });
+  
   // Validate industry from URL parameter
   useEffect(() => {
-    console.log("URL industry parameter check:", industry);
-    console.log("Type of industry:", typeof industry);
-    console.log("Is healthcare?", industry === "healthcare");
-    console.log("Is construction?", industry === "construction");
-    
     if (industry !== "healthcare" && industry !== "construction") {
-      console.log("INVALID INDUSTRY DETECTED:", industry);
       toast({
         title: "Invalid Industry",
         description: "Please select a valid industry (healthcare or construction).",
@@ -36,31 +42,20 @@ export default function OutfitUpload() {
       });
       navigate("/");
     } else {
-      console.log("VALID INDUSTRY DETECTED:", industry);
       setIsValidIndustry(true);
     }
   }, [industry, navigate, toast]);
   
-  // Handle file upload
-  const handleFileChange = useCallback((file: File | null) => {
-    setUploadedImage(file);
-    
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        setImagePreview(e.target?.result as string);
-      };
-      reader.readAsDataURL(file);
-    } else {
-      setImagePreview(null);
+  // Display error toast if image upload fails
+  useEffect(() => {
+    if (imageError) {
+      toast({
+        title: "Image Upload Error",
+        description: imageError,
+        variant: "destructive"
+      });
     }
-  }, []);
-  
-  // Handle file removal
-  const handleRemoveFile = useCallback(() => {
-    setUploadedImage(null);
-    setImagePreview(null);
-  }, []);
+  }, [imageError, toast]);
   
   // Handle description change
   const handleDescriptionChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -88,29 +83,19 @@ export default function OutfitUpload() {
         });
       }
       
-      // Log the data being sent to the API
       const requestData = {
         industry,
         imageBase64,
         description: description || undefined
       };
       
-      console.log("Sending request data:", JSON.stringify(requestData));
-      
       const response = await apiRequest('POST', '/api/check-compliance', requestData);
-      const responseData = await response.json();
-      console.log("Received response:", JSON.stringify(responseData));
-      
-      return responseData;
+      return await response.json();
     },
     onSuccess: (data) => {
       // Store results temporarily in sessionStorage for the results page
       sessionStorage.setItem('complianceResult', JSON.stringify(data));
       sessionStorage.setItem('uploadedImage', imagePreview || '');
-      
-      // Navigate to results page with debugging
-      console.log("Navigation to results with industry:", industry);
-      console.log("Navigation path:", `/results/${industry}`);
       
       // Use a small timeout to ensure state updates are processed first
       setTimeout(() => {
@@ -129,16 +114,8 @@ export default function OutfitUpload() {
   // Handle form submission
   const handleSubmit = useCallback(() => {
     if (!isFormValid) return;
-    
-    // Add console logs to debug the industry parameter
-    console.log("Submitting form with industry:", industry);
-    console.log("Industry type validation:", 
-      industry === "healthcare" || industry === "construction" ? "valid" : "invalid",
-      "Type:", typeof industry
-    );
-    
     complianceMutation.mutate();
-  }, [isFormValid, complianceMutation, industry]);
+  }, [isFormValid, complianceMutation]);
   
   // Define industry-specific elements
   const industryTitle = industry === "healthcare" ? "Healthcare" : "Construction";
@@ -176,6 +153,7 @@ export default function OutfitUpload() {
             onFileChange={handleFileChange}
             preview={imagePreview || undefined}
             onRemoveFile={handleRemoveFile}
+            isCompressing={isCompressing}
           />
           
           <div className="mt-6 flex items-center">
@@ -202,10 +180,17 @@ export default function OutfitUpload() {
       <div className="flex justify-end">
         <Button
           onClick={handleSubmit}
-          disabled={!isFormValid || complianceMutation.isPending}
+          disabled={!isFormValid || complianceMutation.isPending || isCompressing}
           className="px-6 py-3 bg-gradient-to-r from-primary to-blue-600 text-white rounded-lg hover:opacity-90 transition-all flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed shadow-md"
         >
-          <span className="font-medium">{complianceMutation.isPending ? "Checking..." : "Check Compliance"}</span>
+          <span className="font-medium">
+            {complianceMutation.isPending 
+              ? "Analyzing..." 
+              : isCompressing
+                ? "Compressing Image..."
+                : "Check Compliance"
+            }
+          </span>
           <FaArrowRight className="ml-2" />
         </Button>
       </div>

@@ -1,4 +1,5 @@
 import { useState, useCallback } from "react";
+import imageCompression from "browser-image-compression";
 
 interface UseImageUploadOptions {
   maxSizeMB?: number;
@@ -12,6 +13,7 @@ interface UseImageUploadResult {
   handleFileChange: (file: File | null) => void;
   removeFile: () => void;
   isValidFile: (file: File) => boolean;
+  isCompressing: boolean;
 }
 
 export function useImageUpload(options: UseImageUploadOptions = {}): UseImageUploadResult {
@@ -23,6 +25,7 @@ export function useImageUpload(options: UseImageUploadOptions = {}): UseImageUpl
   const [file, setFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [isCompressing, setIsCompressing] = useState<boolean>(false);
   
   const isValidFile = useCallback((file: File): boolean => {
     const maxSizeBytes = maxSizeMB * 1024 * 1024;
@@ -40,7 +43,7 @@ export function useImageUpload(options: UseImageUploadOptions = {}): UseImageUpl
     return true;
   }, [maxSizeMB, acceptedFormats]);
   
-  const handleFileChange = useCallback((file: File | null) => {
+  const handleFileChange = useCallback(async (file: File | null) => {
     setError(null);
     
     if (!file) {
@@ -50,13 +53,53 @@ export function useImageUpload(options: UseImageUploadOptions = {}): UseImageUpl
     }
     
     if (isValidFile(file)) {
-      setFile(file);
-      
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        setPreview(e.target?.result as string);
-      };
-      reader.readAsDataURL(file);
+      try {
+        setIsCompressing(true);
+        
+        // Compress image before processing
+        const compressionOptions = {
+          maxSizeMB: 1,      // Maximum size in MB
+          maxWidthOrHeight: 1920, // Maximum width/height
+          useWebWorker: true,
+          fileType: file.type
+        };
+        
+        // Apply compression if the file is a recognized image type
+        let processedFile = file;
+        if (file.type.startsWith('image/')) {
+          try {
+            processedFile = await imageCompression(file, compressionOptions);
+            console.log('Image compressed:', 
+              `Original size: ${(file.size / 1024 / 1024).toFixed(2)}MB`, 
+              `Compressed size: ${(processedFile.size / 1024 / 1024).toFixed(2)}MB`
+            );
+          } catch (compressError) {
+            console.warn('Image compression failed, using original file:', compressError);
+            // Continue with original file if compression fails
+          }
+        }
+        
+        setFile(processedFile);
+        
+        // Create preview from the processed file
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          setPreview(e.target?.result as string);
+          setIsCompressing(false);
+        };
+        reader.onerror = () => {
+          setError('Failed to read the file. Please try again.');
+          setIsCompressing(false);
+        };
+        reader.readAsDataURL(processedFile);
+        
+      } catch (error) {
+        console.error('Error processing file:', error);
+        setError('Error processing file. Please try again.');
+        setFile(null);
+        setPreview(null);
+        setIsCompressing(false);
+      }
     } else {
       setFile(null);
       setPreview(null);
@@ -75,6 +118,7 @@ export function useImageUpload(options: UseImageUploadOptions = {}): UseImageUpl
     error,
     handleFileChange,
     removeFile,
-    isValidFile
+    isValidFile,
+    isCompressing
   };
 }

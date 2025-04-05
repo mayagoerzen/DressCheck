@@ -86,11 +86,17 @@ export class MemStorage implements IStorage {
     result: ComplianceCheckResponse
   ): Promise<ComplianceCheck> {
     const id = this.currentComplianceCheckId++;
-    const check: ComplianceCheck = { 
-      ...insertCheck, 
+    const timestamp = insertCheck.timestamp || new Date().toISOString();
+    
+    const check: ComplianceCheck = {
       id,
+      industry: insertCheck.industry,
+      imageBase64: insertCheck.imageBase64 || null,
+      description: insertCheck.description || null,
+      timestamp,
       result
     };
+    
     this.complianceChecks.set(id, check);
     return check;
   }

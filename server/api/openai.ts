@@ -99,26 +99,23 @@ export async function analyzeOutfitCompliance(
     }`;
     
     // Setup the messages array with proper typing for OpenAI API
-    const messages = [
-      { role: "system", content: systemContent }
-    ];
+    let userContent: any;
 
     if (imageBase64) {
-      messages.push({
-        role: "user", 
-        content: [
-          { type: "text", text: `Analyze this ${industry} worker's outfit for dress code compliance:` },
-          { type: "image_url", image_url: { url: `data:image/jpeg;base64,${imageBase64}` } }
-        ]
-      });
+      userContent = [
+        { type: "text", text: `Analyze this ${industry} worker's outfit for dress code compliance:` },
+        { type: "image_url", image_url: { url: `data:image/jpeg;base64,${imageBase64}` } }
+      ];
     } else if (description) {
-      messages.push({
-        role: "user",
-        content: `Analyze this ${industry} worker's outfit description for dress code compliance: ${description}`
-      });
+      userContent = `Analyze this ${industry} worker's outfit description for dress code compliance: ${description}`;
     } else {
       throw new Error("Either image or description must be provided");
     }
+
+    const messages = [
+      { role: "system" as const, content: systemContent },
+      { role: "user" as const, content: userContent }
+    ];
 
     const response = await openai.chat.completions.create({
       model: "gpt-4o",

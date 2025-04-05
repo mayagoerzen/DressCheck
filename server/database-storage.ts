@@ -73,13 +73,15 @@ export class DatabaseStorage implements IStorage {
     insertCheck: InsertComplianceCheck,
     result: ComplianceCheckResponse
   ): Promise<ComplianceCheck> {
+    const timestamp = insertCheck.timestamp || new Date().toISOString();
+    
     const [check] = await db
       .insert(complianceChecks)
       .values({
         industry: insertCheck.industry,
-        imageBase64: insertCheck.imageBase64,
-        description: insertCheck.description,
-        timestamp: insertCheck.timestamp,
+        imageBase64: insertCheck.imageBase64 || null,
+        description: insertCheck.description || null,
+        timestamp: timestamp,
         result: result
       })
       .returning();

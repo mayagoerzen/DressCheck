@@ -2,6 +2,7 @@ import { Switch, Route } from "wouter";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
+import { Shirt } from "lucide-react";
 import NotFound from "@/pages/not-found";
 import IndustrySelection from "@/pages/industry-selection";
 import OutfitUpload from "@/pages/outfit-upload";
@@ -30,8 +31,13 @@ function App() {
                 <h1 className="text-2xl font-bold text-gray-900">Outfit Compliance Checker</h1>
                 <p className="text-gray-600 mt-1">Verify your attire meets industry standards</p>
               </div>
-              <div className="bg-primary text-white p-3 rounded-lg shadow-md">
-                <i className="fas fa-check-circle text-xl"></i>
+              <div className="flex items-center">
+                <div className="bg-gradient-to-r from-blue-600 to-blue-400 text-white p-3 rounded-lg shadow-md mr-3">
+                  <Shirt className="w-5 h-5" />
+                </div>
+                <div className="font-bold text-xl bg-gradient-to-r from-blue-700 to-blue-500 text-transparent bg-clip-text">
+                  Dress Check
+                </div>
               </div>
             </div>
           </header>

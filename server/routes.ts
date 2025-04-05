@@ -28,11 +28,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       try {
+        // Prepare parameters for the API call
+        const industry = validatedData.industry as IndustryType;
+        const imageBase64 = validatedData.imageBase64 ? validatedData.imageBase64 : undefined;
+        const description = validatedData.description ? validatedData.description : undefined;
+        
         // Call OpenAI API to analyze outfit compliance
         const result = await analyzeOutfitCompliance(
-          validatedData.industry as IndustryType,
-          validatedData.imageBase64,
-          validatedData.description
+          industry,
+          imageBase64,
+          description
         );
 
         // Parse the response with Zod to ensure correct format

@@ -55,7 +55,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         );
 
         return res.status(200).json(validatedResult);
-      } catch (error) {
+      } catch (err: unknown) {
+        const error = err as Error;
         console.error("Error analyzing outfit compliance:", error);
         
         if (error instanceof ZodError) {
@@ -63,8 +64,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
           return res.status(400).json({ message: validationError.message });
         }
         
+        // Check for payload size error
+        if (error.message && error.message.includes("payload size")) {
+          return res.status(413).json({ 
+            message: "The image file is too large. Please use an image that is less than 20MB or use a more compressed format." 
+          });
+        }
+        
+        // Check for OpenAI-specific errors
+        if (error.message && error.message.includes("OpenAI")) {
+          return res.status(503).json({ 
+            message: "The AI service is currently unavailable. Please try again later or use the text description option instead." 
+          });
+        }
+        
         return res.status(500).json({ 
-          message: "Error analyzing outfit compliance. Please try again." 
+          message: "Error analyzing outfit compliance. Please try again or provide a text description instead." 
         });
       }
     } catch (error) {

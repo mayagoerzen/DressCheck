@@ -77,13 +77,31 @@ export async function analyzeOutfitCompliance(
   
   // Otherwise use the actual OpenAI API
   try {
-    const systemContent = `You are a dress code compliance expert for the ${industry} industry. 
-    Analyze the outfit and determine if it meets industry standards.
-    ${industry === "healthcare" 
-      ? "For healthcare, check for: scrubs/medical uniform, closed-toe shoes, ID badge, hair containment, no excessive jewelry, no long nails." 
-      : "For construction, check for: hard hat, high-visibility clothing, safety boots, eye protection, appropriate workwear, no loose clothing, no jewelry."}
+    const rules = industryRules[industry];
+    const requiredItems = rules.requiredItems.join(", ");
+    const prohibitedItems = rules.prohibitedItems.join(", ");
     
-    Provide a detailed analysis and recommendations to fix any compliance issues.
+    const systemContent = `You are a dress code compliance expert specializing in the ${industry} industry.
+    Your task is to analyze the outfit with extreme precision and determine if it meets industry standards.
+    
+    INDUSTRY REQUIREMENTS FOR ${industry.toUpperCase()}:
+    - Required items: ${requiredItems}
+    - Prohibited items: ${prohibitedItems}
+    
+    ANALYSIS INSTRUCTIONS:
+    1. Carefully examine all visible elements in the image (if provided) or analyze the description thoroughly.
+    2. Identify each required item and verify it is present and correctly worn.
+    3. Check for any prohibited items.
+    4. For each item, provide specific details about what you observe.
+    5. Be extremely specific in your analysis - mention colors, positioning, and condition of items.
+    
+    COMPLIANCE RULES:
+    - For an outfit to be compliant, ALL required items must be present AND properly worn.
+    - ANY prohibited item will make the outfit non-compliant.
+    - If an item cannot be clearly seen or determined from the image/description, consider it missing.
+    
+    Provide a detailed analysis and actionable recommendations to fix any compliance issues.
+    
     Respond with JSON in this format: 
     {
       "isCompliant": boolean,
@@ -103,11 +121,17 @@ export async function analyzeOutfitCompliance(
 
     if (imageBase64) {
       userContent = [
-        { type: "text", text: `Analyze this ${industry} worker's outfit for dress code compliance:` },
-        { type: "image_url", image_url: { url: `data:image/jpeg;base64,${imageBase64}` } }
+        { 
+          type: "text", 
+          text: `Please analyze this ${industry} worker's outfit for dress code compliance. Look carefully at all visible elements and be extremely detailed in your analysis. Pay special attention to: clothing type/color, footwear, ID badges, protective equipment, accessories, and overall appearance. If you can't clearly see an item, note it as potentially missing.` 
+        },
+        { 
+          type: "image_url", 
+          image_url: { url: `data:image/jpeg;base64,${imageBase64}` } 
+        }
       ];
     } else if (description) {
-      userContent = `Analyze this ${industry} worker's outfit description for dress code compliance: ${description}`;
+      userContent = `Please analyze this ${industry} worker's outfit description for dress code compliance in extreme detail: "${description}". Evaluate every item mentioned against the required and prohibited lists. For items not explicitly mentioned in the description, consider them as potentially missing.`;
     } else {
       throw new Error("Either image or description must be provided");
     }
@@ -121,7 +145,11 @@ export async function analyzeOutfitCompliance(
       model: "gpt-4o",
       messages: messages,
       response_format: { type: "json_object" },
-      max_tokens: 1000,
+      max_tokens: 1500,
+      temperature: 0.2, // Lower temperature for more consistent, predictable outputs
+      top_p: 0.95,      // High top_p for comprehensive consideration
+      presence_penalty: 0.1, // Slight encouragement for diverse elements
+      frequency_penalty: 0.2, // Discourage repetition
     });
 
     const result = JSON.parse(response.choices[0].message.content as string);

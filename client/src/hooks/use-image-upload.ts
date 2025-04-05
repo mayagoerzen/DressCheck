@@ -16,8 +16,8 @@ interface UseImageUploadResult {
 
 export function useImageUpload(options: UseImageUploadOptions = {}): UseImageUploadResult {
   const { 
-    maxSizeMB = 10, 
-    acceptedFormats = ['image/jpeg', 'image/png', 'image/heic']
+    maxSizeMB = 20, 
+    acceptedFormats = ['image/jpeg', 'image/png', 'image/heic', 'image/jpg']
   } = options;
   
   const [file, setFile] = useState<File | null>(null);

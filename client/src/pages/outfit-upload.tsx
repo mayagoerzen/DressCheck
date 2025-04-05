@@ -72,42 +72,83 @@ export default function OutfitUpload() {
   // API mutation for checking compliance
   const complianceMutation = useMutation({
     mutationFn: async () => {
-      // Convert image to base64 if it exists
-      let imageBase64 = null;
-      if (uploadedImage) {
-        const reader = new FileReader();
-        imageBase64 = await new Promise<string>((resolve) => {
-          reader.onload = (e) => {
-            const result = e.target?.result as string;
-            // Remove the data:image/jpeg;base64, prefix
-            const base64 = result.split(',')[1];
-            resolve(base64);
-          };
-          reader.readAsDataURL(uploadedImage);
-        });
+      try {
+        // Convert image to base64 if it exists
+        let imageBase64 = null;
+        if (uploadedImage) {
+          const reader = new FileReader();
+          try {
+            imageBase64 = await new Promise<string>((resolve, reject) => {
+              reader.onload = (e) => {
+                try {
+                  const result = e.target?.result as string;
+                  // Remove the data:image/jpeg;base64, prefix
+                  const base64 = result.split(',')[1];
+                  resolve(base64);
+                } catch (err) {
+                  reject(new Error("Failed to process image. The file may be corrupted."));
+                }
+              };
+              reader.onerror = () => {
+                reject(new Error("Failed to read the image file. Please try a different image."));
+              };
+              reader.readAsDataURL(uploadedImage);
+            });
+          } catch (err) {
+            // Safe error handling regardless of error type
+            let errorMessage = "Unknown error";
+            if (err instanceof Error) {
+              errorMessage = err.message;
+            } else if (typeof err === 'string') {
+              errorMessage = err;
+            } else if (err && typeof err === 'object' && 'message' in err) {
+              errorMessage = err.message as string;
+            }
+            
+            console.error("Error processing image:", err);
+            throw new Error("Failed to process image: " + errorMessage);
+          }
+        }
+        
+        // Log the data being sent to the API
+        const requestData = {
+          industry,
+          imageBase64,
+          description: description || undefined
+        };
+        
+        // For debugging only - don't log the entire base64 string
+        console.log("Sending request data:", JSON.stringify({
+          ...requestData,
+          imageBase64: imageBase64 ? "[BASE64_IMAGE_DATA]" : null
+        }));
+        
+        const response = await apiRequest('POST', '/api/check-compliance', requestData);
+        
+        if (response.status === 413) {
+          throw new Error("The image file is too large. Please use a smaller image or compress it further.");
+        }
+        
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.message || "Server error. Please try again.");
+        }
+        
+        const responseData = await response.json();
+        console.log("Received response:", JSON.stringify(responseData));
+        
+        return responseData;
+      } catch (error) {
+        console.error("Error in compliance mutation:", error);
+        throw error;
       }
-      
-      // Log the data being sent to the API
-      const requestData = {
-        industry,
-        imageBase64,
-        description: description || undefined
-      };
-      
-      console.log("Sending request data:", JSON.stringify(requestData));
-      
-      const response = await apiRequest('POST', '/api/check-compliance', requestData);
-      const responseData = await response.json();
-      console.log("Received response:", JSON.stringify(responseData));
-      
-      return responseData;
     },
     onSuccess: (data) => {
       // Store results temporarily in sessionStorage for the results page
       sessionStorage.setItem('complianceResult', JSON.stringify(data));
       sessionStorage.setItem('uploadedImage', imagePreview || '');
       
-      // Navigate to results page with debugging
+      // Navigate to results page
       console.log("Navigation to results with industry:", industry);
       console.log("Navigation path:", `/results/${industry}`);
       
@@ -117,9 +158,24 @@ export default function OutfitUpload() {
       }, 100);
     },
     onError: (error) => {
+      // Provide user-friendly error messages
+      let errorMessage = "Failed to check compliance. Please try again.";
+      
+      if (error.message) {
+        if (error.message.includes("too large")) {
+          errorMessage = "The image file is too large. Please use a smaller image or provide a text description instead.";
+        } else if (error.message.includes("failed to process")) {
+          errorMessage = "We couldn't process your image. Please try a different image or provide a text description instead.";
+        } else if (error.message.includes("AI service")) {
+          errorMessage = "Our analysis service is temporarily unavailable. Please try again later or provide a text description of your outfit.";
+        } else {
+          errorMessage = error.message;
+        }
+      }
+      
       toast({
         title: "Error",
-        description: error.message || "Failed to check compliance. Please try again.",
+        description: errorMessage,
         variant: "destructive"
       });
     }

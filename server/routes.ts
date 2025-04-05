@@ -6,6 +6,12 @@ import { insertComplianceCheckSchema, complianceCheckResponseSchema, IndustryTyp
 import { ZodError } from "zod";
 import { fromZodError } from "zod-validation-error";
 
+// Global settings (stored in-memory for simplicity) - exported for use in other modules
+export const appSettings = {
+  apiKey: process.env.OPENAI_API_KEY || "",
+  useMockData: !process.env.OPENAI_API_KEY
+};
+
 export async function registerRoutes(app: Express): Promise<Server> {
   // API endpoint to check outfit compliance
   app.post('/api/check-compliance', async (req, res) => {
@@ -71,7 +77,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
           });
         }
         
-        // Check for OpenAI-specific errors
+        // Check for OpenAI quota errors
+        if (error.message && error.message.includes("quota")) {
+          console.log("OpenAI quota exceeded. Falling back to mock data.");
+          
+          // Try to get mock data as a fallback
+          try {
+            const mockResult = await import('./api/mock-data').then(module => 
+              module.getMockComplianceResponse(validatedData.industry as IndustryType)
+            );
+            return res.status(200).json(mockResult);
+          } catch (mockError) {
+            console.error("Failed to get mock data:", mockError);
+          }
+        }
+        
+        // Check for other OpenAI-specific errors
         if (error.message && error.message.includes("OpenAI")) {
           return res.status(503).json({ 
             message: "The AI service is currently unavailable. Please try again later or use the text description option instead." 
@@ -111,6 +132,51 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
     
     return res.status(200).json(complianceRules);
+  });
+  
+  // Use the appSettings declared at the top of the file
+  
+  // API endpoint to get settings
+  app.get('/api/settings', (req, res) => {
+    // Do not expose the actual API key in the response
+    return res.status(200).json({
+      apiKey: appSettings.apiKey ? "*****" : "",
+      useMockData: appSettings.useMockData
+    });
+  });
+  
+  // API endpoint to update settings
+  app.post('/api/settings', (req, res) => {
+    try {
+      const { apiKey, useMockData } = req.body;
+      
+      // Validate settings
+      if (apiKey !== undefined && typeof apiKey !== 'string') {
+        return res.status(400).json({ message: "API key must be a string" });
+      }
+      
+      if (useMockData !== undefined && typeof useMockData !== 'boolean') {
+        return res.status(400).json({ message: "useMockData must be a boolean" });
+      }
+      
+      // Update settings
+      if (apiKey !== undefined) {
+        appSettings.apiKey = apiKey;
+        // Update environment variable for OpenAI API calls
+        if (apiKey) {
+          process.env.OPENAI_API_KEY = apiKey;
+        }
+      }
+      
+      if (useMockData !== undefined) {
+        appSettings.useMockData = useMockData;
+      }
+      
+      return res.status(200).json({ message: "Settings updated successfully" });
+    } catch (error) {
+      console.error("Error updating settings:", error);
+      return res.status(500).json({ message: "Failed to update settings" });
+    }
   });
 
   // Create HTTP server

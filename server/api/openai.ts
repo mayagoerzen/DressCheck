@@ -1,8 +1,41 @@
 import OpenAI from "openai";
 import { IndustryType, ComplianceCheckResponse } from "@shared/schema";
 
+// Import app settings - must use require to avoid circular dependencies
+// This works because we're using CommonJS modules under the hood
+let appSettings: { apiKey: string; useMockData: boolean };
+try {
+  appSettings = require("../routes").appSettings;
+} catch (e) {
+  // Fallback if import fails
+  appSettings = {
+    apiKey: process.env.OPENAI_API_KEY || "",
+    useMockData: !process.env.OPENAI_API_KEY
+  };
+}
+
 // the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+// Initialize OpenAI client - this will be recreated whenever a new API key is set
+let openaiClient: OpenAI | null = null;
+
+function getOpenAIClient() {
+  // Clear the client if it exists but the key has changed
+  if (openaiClient && openaiClient.apiKey !== process.env.OPENAI_API_KEY) {
+    openaiClient = null;
+  }
+  
+  // Create a new client if needed
+  if (!openaiClient && process.env.OPENAI_API_KEY) {
+    try {
+      openaiClient = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+    } catch (error) {
+      console.error("Failed to create OpenAI client:", error);
+      return null;
+    }
+  }
+  
+  return openaiClient;
+}
 
 // Industry-specific rules to check against
 const industryRules = {
@@ -60,16 +93,16 @@ const industryRules = {
 
 import { getMockComplianceResponse } from "./mock-data";
 
-// Environment variable to control whether to use the real API or mock data
-const USE_MOCK_DATA = process.env.USE_MOCK_DATA === "true" || false; // Default to false to use the real API
-
 export async function analyzeOutfitCompliance(
   industry: IndustryType,
   imageBase64?: string,
   description?: string
 ): Promise<ComplianceCheckResponse> {
-  // Use mock data if enabled (or if OpenAI API key is missing)
-  if (USE_MOCK_DATA || !process.env.OPENAI_API_KEY) {
+  // Get the current settings at runtime
+  const useMockData = typeof appSettings !== 'undefined' ? appSettings.useMockData : true;
+  
+  // Use mock data if enabled or if OpenAI API key is missing
+  if (useMockData || !process.env.OPENAI_API_KEY) {
     console.log("Using mock data for compliance check");
     
     // Simulate a brief delay to mimic API call
@@ -173,6 +206,13 @@ Evaluate every item mentioned against the required and prohibited lists. For ite
       { role: "system" as const, content: systemContent },
       { role: "user" as const, content: userContent }
     ];
+
+    // Get or create the OpenAI client
+    const openai = getOpenAIClient();
+    
+    if (!openai) {
+      throw new Error("OpenAI client could not be initialized. Please check your API key.");
+    }
 
     const response = await openai.chat.completions.create({
       model: "gpt-4o",

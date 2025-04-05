@@ -144,9 +144,26 @@ export default function OutfitUpload() {
       }
     },
     onSuccess: (data) => {
-      // Store results temporarily in sessionStorage for the results page
-      sessionStorage.setItem('complianceResult', JSON.stringify(data));
-      sessionStorage.setItem('uploadedImage', imagePreview || '');
+      try {
+        // Store results temporarily in sessionStorage for the results page
+        sessionStorage.setItem('complianceResult', JSON.stringify(data));
+        
+        // Only store image reference instead of the full base64 data to avoid quota issues
+        // For large images, we'll avoid storing them in sessionStorage altogether
+        if (imagePreview && imagePreview.length > 500000) {
+          // Just store a flag that an image was used, but don't store the actual image
+          sessionStorage.setItem('uploadedImage', 'large-image-used');
+        } else if (imagePreview) {
+          // For smaller images, we can still store them
+          sessionStorage.setItem('uploadedImage', imagePreview);
+        } else {
+          sessionStorage.setItem('uploadedImage', '');
+        }
+      } catch (storageError) {
+        console.error("Storage error:", storageError);
+        // If we can't store the image, continue without it
+        // The results page will just not show the image preview
+      }
       
       // Navigate to results page
       console.log("Navigation to results with industry:", industry);

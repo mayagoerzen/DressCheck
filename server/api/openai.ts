@@ -13,6 +13,7 @@ const industryRules = {
       "ID badge",
       "clean uniform",
       "hair containment (if applicable)",
+      "face mask or respirator",
     ],
     prohibitedItems: [
       "open-toed shoes",
@@ -20,6 +21,7 @@ const industryRules = {
       "long nails",
       "strong perfume/cologne",
       "casual clothing (jeans, t-shirts)",
+      "damaged or soiled PPE",
     ],
     recommendations: {
       "ID badge": "Ensure your ID badge is visible and properly displayed at chest level. Contact your department administrator if you need a replacement.",
@@ -27,27 +29,29 @@ const industryRules = {
       "hair": "Hair should be pulled back and secured above the collar. Use hair ties or clips to ensure proper containment.",
       "jewelry": "Remove excessive jewelry. Only simple rings, studs, and professional watches are typically allowed.",
       "uniform": "Ensure your scrubs or medical uniform is clean, wrinkle-free, and fits properly. Replace worn or stained items.",
+      "mask": "Wear a properly fitted surgical mask or respirator (N95, KN95) as required by facility policy. Ensure it covers both nose and mouth completely.",
     },
   },
   construction: {
     requiredItems: [
-      "hard hat",
+      "hard hat or safety helmet",
       "high-visibility vest or clothing",
-      "safety boots or shoes",
+      "safety boots or protective footwear",
       "eye protection",
       "appropriate workwear (pants, long-sleeve shirts)",
     ],
     prohibitedItems: [
       "loose clothing",
       "jewelry",
-      "sandals or casual shoes",
+      "regular sneakers or casual shoes",
+      "sandals or open-toed footwear",
       "shorts (on most sites)",
       "damaged protective equipment",
     ],
     recommendations: {
-      "hard hat": "Always wear an approved hard hat that meets ANSI/ISEA Z89.1 standards. Replace if damaged or older than 5 years.",
+      "hard hat": "Always wear an approved hard hat that meets ANSI/ISEA Z89.1 standards. Replace if damaged or older than 5 years. Hard hats can be various colors including yellow, white, orange, or blue.",
       "high-visibility": "Wear a high-visibility vest or clothing that meets Class 2 or 3 based on your work environment. Ensure it's clean and reflective strips are intact.",
-      "footwear": "Use steel-toed or composite-toed boots that meet ASTM F2413 standards. Ensure they provide ankle support and puncture resistance.",
+      "footwear": "Use steel-toed, composite-toed, or safety boots that meet ASTM F2413 standards. Ensure they provide ankle support and puncture resistance. Safety boots typically have a reinforced toe and thick soles.",
       "eye protection": "Wear safety glasses or goggles that meet ANSI Z87.1 standards. Consider side shields for additional protection.",
       "gloves": "Use appropriate gloves for your specific task. Cut-resistant gloves for handling sharp materials, insulated for electrical work, etc.",
     }
@@ -57,7 +61,7 @@ const industryRules = {
 import { getMockComplianceResponse } from "./mock-data";
 
 // Environment variable to control whether to use the real API or mock data
-const USE_MOCK_DATA = process.env.USE_MOCK_DATA === "true" || true; // Default to true for now due to quota issues
+const USE_MOCK_DATA = process.env.USE_MOCK_DATA === "true" || false; // Default to false to use the real API
 
 export async function analyzeOutfitCompliance(
   industry: IndustryType,
@@ -87,6 +91,15 @@ export async function analyzeOutfitCompliance(
     INDUSTRY REQUIREMENTS FOR ${industry.toUpperCase()}:
     - Required items: ${requiredItems}
     - Prohibited items: ${prohibitedItems}
+    
+    ITEM RECOGNITION GUIDELINES:
+    ${industry === "healthcare" ? `
+    - Face masks: Recognize surgical masks, N95 respirators, or any medical-grade face coverings. These are REQUIRED. They may be blue, white, or other colors.
+    - Scrubs: Can be various colors like blue, green, or patterned. Typically consist of a top and matching pants.
+    - ID badges: Look for identification cards typically worn on lanyards or clips at chest level.` : `
+    - Hard hats/safety helmets: These may be yellow, white, orange, blue, or other colors. They must cover the top of the head. Look carefully for this critical safety item.
+    - Safety boots: These have reinforced toes (steel or composite), thick soles, often leather, and typically cover the ankle. Regular sneakers, running shoes, or casual footwear are NOT compliant.
+    - High-visibility clothing: Usually yellow or orange vests or clothing with reflective strips.`}
     
     ANALYSIS INSTRUCTIONS:
     1. Carefully examine all visible elements in the image (if provided) or analyze the description thoroughly.
@@ -123,7 +136,17 @@ export async function analyzeOutfitCompliance(
       userContent = [
         { 
           type: "text", 
-          text: `Please analyze this ${industry} worker's outfit for dress code compliance. Look carefully at all visible elements and be extremely detailed in your analysis. Pay special attention to: clothing type/color, footwear, ID badges, protective equipment, accessories, and overall appearance. If you can't clearly see an item, note it as potentially missing.` 
+          text: `Please analyze this ${industry} worker's outfit for dress code compliance. Look carefully at all visible elements and be extremely detailed in your analysis.
+
+${industry === "healthcare" ? 
+`IMPORTANT: Carefully check if the person is wearing a mask. This is a critical requirement for healthcare workers.
+Also look for an ID badge which must be visible. Pay attention to shoe type - they must be closed-toe.` 
+: 
+`IMPORTANT: Carefully examine the head area for a hard hat or safety helmet - this is a critical safety requirement.
+Also carefully check the footwear - regular sneakers/athletic shoes are NOT compliant - workers need protective boots.
+Look for high-visibility clothing which is typically yellow or orange with reflective elements.`}
+
+Pay special attention to: clothing type/color, footwear, protective equipment, accessories, and overall appearance. If you can't clearly see an item, note it as potentially missing.` 
         },
         { 
           type: "image_url", 
@@ -131,7 +154,17 @@ export async function analyzeOutfitCompliance(
         }
       ];
     } else if (description) {
-      userContent = `Please analyze this ${industry} worker's outfit description for dress code compliance in extreme detail: "${description}". Evaluate every item mentioned against the required and prohibited lists. For items not explicitly mentioned in the description, consider them as potentially missing.`;
+      userContent = `Please analyze this ${industry} worker's outfit description for dress code compliance in extreme detail: "${description}".
+
+${industry === "healthcare" ? 
+`IMPORTANT: Check if a mask or face covering is mentioned - this is REQUIRED for healthcare workers.
+Also check for ID badge which must be visible. Pay attention to shoe type - they must be closed-toe.` 
+: 
+`IMPORTANT: Check if a hard hat or safety helmet is mentioned - this is a CRITICAL safety requirement.
+Also check the footwear - regular sneakers/athletic shoes are NOT compliant - workers need protective boots.
+Look for mention of high-visibility clothing which is typically yellow or orange with reflective elements.`}
+
+Evaluate every item mentioned against the required and prohibited lists. For items not explicitly mentioned in the description, consider them as potentially missing.`;
     } else {
       throw new Error("Either image or description must be provided");
     }

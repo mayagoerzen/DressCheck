@@ -21,6 +21,10 @@ const healthcareMockResponses: ComplianceCheckResponse[] = [
       {
         item: "Hair containment",
         description: "Hair is properly secured and not touching collar"
+      },
+      {
+        item: "Face mask",
+        description: "Wearing a properly fitted surgical mask covering nose and mouth"
       }
     ],
     recommendations: [
@@ -33,6 +37,11 @@ const healthcareMockResponses: ComplianceCheckResponse[] = [
   {
     isCompliant: false,
     issues: [
+      {
+        type: "missing",
+        item: "Face mask",
+        description: "No mask is visible or mentioned. Face masks are required for all healthcare workers."
+      },
       {
         type: "missing",
         item: "ID Badge",
@@ -51,6 +60,10 @@ const healthcareMockResponses: ComplianceCheckResponse[] = [
       }
     ],
     recommendations: [
+      {
+        title: "Wear a face mask",
+        description: "Always wear a properly fitted surgical mask or appropriate respirator that covers both nose and mouth completely."
+      },
       {
         title: "Display ID badge",
         description: "Ensure your ID badge is visible and properly displayed at chest level. Contact your department administrator if you need a replacement."
@@ -103,7 +116,7 @@ const constructionMockResponses: ComplianceCheckResponse[] = [
       {
         type: "missing",
         item: "Hard Hat",
-        description: "No hard hat is visible in the image or mentioned in the description"
+        description: "No hard hat or safety helmet is visible in the image or mentioned in the description. This is a critical safety requirement for construction sites."
       },
       {
         type: "missing",
@@ -113,19 +126,19 @@ const constructionMockResponses: ComplianceCheckResponse[] = [
       {
         type: "prohibited",
         item: "Footwear",
-        description: "Regular sneakers do not provide adequate protection for construction sites"
+        description: "Regular sneakers or athletic shoes do not provide adequate protection for construction sites. Safety boots with reinforced toes are required."
       }
     ],
     compliantItems: [
       {
         item: "High-visibility clothing",
-        description: "Properly wearing high-visibility vest"
+        description: "Properly wearing high-visibility vest with reflective elements"
       }
     ],
     recommendations: [
       {
         title: "Wear appropriate hard hat",
-        description: "Always wear an approved hard hat that meets ANSI/ISEA Z89.1 standards. Replace if damaged or older than 5 years."
+        description: "Always wear an approved hard hat that meets ANSI/ISEA Z89.1 standards. Hard hats can be various colors including yellow, white, orange, or blue. Replace if damaged or older than 5 years."
       },
       {
         title: "Use proper eye protection",
@@ -133,7 +146,7 @@ const constructionMockResponses: ComplianceCheckResponse[] = [
       },
       {
         title: "Upgrade footwear",
-        description: "Use steel-toed or composite-toed boots that meet ASTM F2413 standards. Ensure they provide ankle support and puncture resistance."
+        description: "Use steel-toed or composite-toed boots that meet ASTM F2413 standards. These typically have reinforced toes and thick soles. Ensure they provide ankle support and puncture resistance."
       }
     ]
   }

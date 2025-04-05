@@ -45,9 +45,25 @@ export default function Results() {
     try {
       const parsedResult = JSON.parse(storedResult) as ComplianceCheckResponse;
       setComplianceResult(parsedResult);
-      setUploadedImage(storedImage);
+      
+      // Handle the case where the image was too large to store
+      if (storedImage === 'large-image-used') {
+        // Just set a flag that an image was used but we couldn't store it
+        setUploadedImage(null);
+        console.log("Image was too large to store in session storage");
+        
+        toast({
+          title: "Note",
+          description: "Your image was analyzed successfully, but was too large to display in the results.",
+          variant: "default"
+        });
+      } else {
+        setUploadedImage(storedImage);
+      }
+      
       setIsValidIndustry(true);
     } catch (error) {
+      console.error("Error parsing results:", error);
       toast({
         title: "Error",
         description: "Invalid result data. Please try again.",

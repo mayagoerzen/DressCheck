@@ -6,6 +6,7 @@ import NotFound from "@/pages/not-found";
 import IndustrySelection from "@/pages/industry-selection";
 import OutfitUpload from "@/pages/outfit-upload";
 import Results from "@/pages/results";
+import { FaCheckCircle, FaClipboardCheck } from "react-icons/fa";
 
 function Router() {
   return (
@@ -27,13 +28,17 @@ function App() {
           <header className="mb-8">
             <div className="flex items-center justify-between">
               <div>
-                <h1 className="text-2xl font-bold text-gray-900">Outfit Compliance Checker</h1>
-                <p className="text-gray-600 mt-1">Verify your attire meets industry standards</p>
+                <h1 className="text-3xl font-bold text-gray-900 flex items-center">
+                  <span className="bg-gradient-to-r from-primary to-blue-700 bg-clip-text text-transparent">DressCheck</span>
+                  <FaClipboardCheck className="text-primary ml-2" />
+                </h1>
+                <p className="text-gray-600 mt-1 text-lg">Verify your attire meets industry standards</p>
               </div>
-              <div className="bg-primary text-white p-3 rounded-lg shadow-md">
-                <i className="fas fa-check-circle text-xl"></i>
+              <div className="bg-gradient-to-r from-primary to-blue-700 text-white p-4 rounded-lg shadow-lg">
+                <FaCheckCircle className="text-2xl" />
               </div>
             </div>
+            <div className="mt-4 h-1 w-full bg-gradient-to-r from-primary to-blue-700 rounded-full"></div>
           </header>
 
           <Router />

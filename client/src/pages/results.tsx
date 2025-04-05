@@ -6,6 +6,7 @@ import { NavigationBreadcrumb } from "@/components/navigation-breadcrumb";
 import { ComplianceIssuesList } from "@/components/compliance-issues-list";
 import { RecommendationItem } from "@/components/recommendation-item";
 import { IndustryType, ComplianceCheckResponse } from "@shared/schema";
+import { FaUserMd, FaHardHat, FaCheckCircle, FaExclamationTriangle, FaRedo, FaDownload } from "react-icons/fa";
 
 export default function Results() {
   const { industry } = useParams<{ industry: IndustryType }>();
@@ -117,35 +118,42 @@ export default function Results() {
   
   // Define industry-specific elements
   const industryTitle = industry === "healthcare" ? "Healthcare" : "Construction";
+  const IndustryIcon = industry === "healthcare" ? FaUserMd : FaHardHat;
+  const industryColor = industry === "healthcare" ? "text-blue-500" : "text-amber-500";
   
   return (
     <main>
       <NavigationBreadcrumb currentStep="Compliance Results" industry={industry} />
       
-      <div className="mb-6">
-        <h2 className="text-xl font-semibold text-gray-800 mb-2">{industryTitle} Outfit Compliance Results</h2>
-        <p className="text-gray-600">Review your outfit compliance with industry standards</p>
+      <div className="mb-6 flex items-center">
+        <div className={`p-3 rounded-full mr-3 ${industry === "healthcare" ? "bg-blue-100" : "bg-amber-100"}`}>
+          <IndustryIcon className={`text-2xl ${industryColor}`} />
+        </div>
+        <div>
+          <h2 className="text-2xl font-bold text-gray-800 mb-1">{industryTitle} Outfit Compliance Results</h2>
+          <p className="text-gray-600">Review your outfit compliance with industry standards</p>
+        </div>
       </div>
       
       {/* Compliance Status */}
-      <div className="bg-white rounded-xl border border-gray-200 p-6 mb-6">
+      <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-6 mb-6">
         {complianceResult.isCompliant ? (
-          <div className="flex items-center">
+          <div className="flex items-center p-4 bg-green-50 rounded-lg border border-green-100">
             <div className="bg-green-100 p-3 rounded-full mr-4">
-              <i className="fas fa-check text-xl text-secondary"></i>
+              <FaCheckCircle className="text-xl text-green-600" />
             </div>
             <div>
-              <h3 className="text-lg font-medium text-secondary">Your outfit is compliant!</h3>
+              <h3 className="text-xl font-bold text-green-600">Your outfit is compliant!</h3>
               <p className="text-gray-600">Your outfit meets all required industry standards</p>
             </div>
           </div>
         ) : (
-          <div className="flex items-center">
+          <div className="flex items-center p-4 bg-red-50 rounded-lg border border-red-100">
             <div className="bg-red-100 p-3 rounded-full mr-4">
-              <i className="fas fa-exclamation-triangle text-xl text-danger"></i>
+              <FaExclamationTriangle className="text-xl text-red-600" />
             </div>
             <div>
-              <h3 className="text-lg font-medium text-danger">Your outfit is not compliant</h3>
+              <h3 className="text-xl font-bold text-red-600">Your outfit is not compliant</h3>
               <p className="text-gray-600">We found some items that don't meet industry standards</p>
             </div>
           </div>
@@ -155,9 +163,12 @@ export default function Results() {
       {/* Results Image and Details */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
         {/* Left Column: Image */}
-        <div className="bg-white rounded-xl border border-gray-200 p-6">
-          <h3 className="text-lg font-medium mb-4">Your Outfit</h3>
-          <div className="aspect-w-4 aspect-h-3 bg-gray-100 rounded-lg overflow-hidden">
+        <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-6">
+          <h3 className="text-lg font-semibold mb-4 flex items-center">
+            <span className={`inline-block w-2 h-2 rounded-full ${industryColor} mr-2`}></span>
+            Your Outfit
+          </h3>
+          <div className="aspect-w-4 aspect-h-3 bg-gray-50 rounded-lg overflow-hidden border border-gray-200">
             {uploadedImage ? (
               <img 
                 src={uploadedImage} 
@@ -173,16 +184,22 @@ export default function Results() {
         </div>
         
         {/* Right Column: Compliance Details */}
-        <div className="bg-white rounded-xl border border-gray-200 p-6">
-          <h3 className="text-lg font-medium mb-4">Compliance Analysis</h3>
+        <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-6">
+          <h3 className="text-lg font-semibold mb-4 flex items-center">
+            <span className={`inline-block w-2 h-2 rounded-full ${industryColor} mr-2`}></span>
+            Compliance Analysis
+          </h3>
           <ComplianceIssuesList result={complianceResult} />
         </div>
       </div>
       
       {/* Recommendations */}
       {complianceResult.recommendations.length > 0 && (
-        <div className="bg-white rounded-xl border border-gray-200 p-6 mb-6">
-          <h3 className="text-lg font-medium mb-4">Recommendations</h3>
+        <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-6 mb-6">
+          <h3 className="text-lg font-semibold mb-4 flex items-center">
+            <span className={`inline-block w-2 h-2 rounded-full ${industryColor} mr-2`}></span>
+            Recommendations
+          </h3>
           <div className="space-y-4">
             {complianceResult.recommendations.map((recommendation, index) => (
               <RecommendationItem 
@@ -196,20 +213,20 @@ export default function Results() {
       )}
       
       {/* Action Buttons */}
-      <div className="flex justify-between">
+      <div className="flex flex-col sm:flex-row justify-between gap-4 mt-8">
         <Button
           onClick={handleCheckAnother}
           variant="outline"
-          className="px-6 py-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors flex items-center"
+          className="px-6 py-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors flex items-center justify-center"
         >
-          <i className="fas fa-redo mr-2"></i>
+          <FaRedo className="mr-2" />
           <span>Check Another Outfit</span>
         </Button>
         <Button
           onClick={handleDownloadReport}
-          className="px-6 py-3 bg-primary text-white rounded-lg hover:bg-blue-600 transition-colors flex items-center"
+          className="px-6 py-3 bg-gradient-to-r from-primary to-blue-600 text-white rounded-lg hover:opacity-90 transition-all flex items-center justify-center shadow-md"
         >
-          <i className="fas fa-download mr-2"></i>
+          <FaDownload className="mr-2" />
           <span>Download Report</span>
         </Button>
       </div>

@@ -1,6 +1,7 @@
 import { useCallback } from "react";
 import { useLocation, Link } from "wouter";
 import { IndustryType } from "@shared/schema";
+import { FaArrowLeft } from "react-icons/fa";
 
 interface NavigationBreadcrumbProps {
   currentStep: string;
@@ -29,9 +30,9 @@ export function NavigationBreadcrumb({
     <div className="flex items-center mb-6 text-sm">
       <button 
         onClick={handleBackClick}
-        className="flex items-center text-gray-600 hover:text-gray-900 mr-2"
+        className="flex items-center text-gray-600 hover:text-gray-900 hover:underline mr-2 transition-colors"
       >
-        <i className="fas fa-arrow-left mr-2"></i>
+        <FaArrowLeft className="mr-2" />
         <span>Back</span>
       </button>
       <div className="w-px h-4 bg-gray-300 mx-2"></div>

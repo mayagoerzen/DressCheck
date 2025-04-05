@@ -21,7 +21,13 @@ export default function OutfitUpload() {
   
   // Validate industry from URL parameter
   useEffect(() => {
+    console.log("URL industry parameter check:", industry);
+    console.log("Type of industry:", typeof industry);
+    console.log("Is healthcare?", industry === "healthcare");
+    console.log("Is construction?", industry === "construction");
+    
     if (industry !== "healthcare" && industry !== "construction") {
+      console.log("INVALID INDUSTRY DETECTED:", industry);
       toast({
         title: "Invalid Industry",
         description: "Please select a valid industry (healthcare or construction).",
@@ -29,6 +35,7 @@ export default function OutfitUpload() {
       });
       navigate("/");
     } else {
+      console.log("VALID INDUSTRY DETECTED:", industry);
       setIsValidIndustry(true);
     }
   }, [industry, navigate, toast]);
@@ -80,13 +87,20 @@ export default function OutfitUpload() {
         });
       }
       
-      const response = await apiRequest('POST', '/api/check-compliance', {
+      // Log the data being sent to the API
+      const requestData = {
         industry,
         imageBase64,
         description: description || undefined
-      });
+      };
       
-      return await response.json();
+      console.log("Sending request data:", JSON.stringify(requestData));
+      
+      const response = await apiRequest('POST', '/api/check-compliance', requestData);
+      const responseData = await response.json();
+      console.log("Received response:", JSON.stringify(responseData));
+      
+      return responseData;
     },
     onSuccess: (data) => {
       // Store results temporarily in sessionStorage for the results page
@@ -109,8 +123,15 @@ export default function OutfitUpload() {
   const handleSubmit = useCallback(() => {
     if (!isFormValid) return;
     
+    // Add console logs to debug the industry parameter
+    console.log("Submitting form with industry:", industry);
+    console.log("Industry type validation:", 
+      industry === "healthcare" || industry === "construction" ? "valid" : "invalid",
+      "Type:", typeof industry
+    );
+    
     complianceMutation.mutate();
-  }, [isFormValid, complianceMutation]);
+  }, [isFormValid, complianceMutation, industry]);
   
   // Define industry-specific elements
   const industryTitle = industry === "healthcare" ? "Healthcare" : "Construction";

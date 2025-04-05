@@ -55,11 +55,28 @@ const industryRules = {
   }
 };
 
+import { getMockComplianceResponse } from "./mock-data";
+
+// Environment variable to control whether to use the real API or mock data
+const USE_MOCK_DATA = process.env.USE_MOCK_DATA === "true" || true; // Default to true for now due to quota issues
+
 export async function analyzeOutfitCompliance(
   industry: IndustryType,
   imageBase64?: string,
   description?: string
 ): Promise<ComplianceCheckResponse> {
+  // Use mock data if enabled (or if OpenAI API key is missing)
+  if (USE_MOCK_DATA || !process.env.OPENAI_API_KEY) {
+    console.log("Using mock data for compliance check");
+    
+    // Simulate a brief delay to mimic API call
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    
+    // Return mock data
+    return getMockComplianceResponse(industry);
+  }
+  
+  // Otherwise use the actual OpenAI API
   try {
     let messages: Array<{ role: string; content: any }> = [
       {

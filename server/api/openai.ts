@@ -1,9 +1,8 @@
 import OpenAI from "openai";
+import { IndustryType, ComplianceCheckResponse } from "@shared/schema";
 
 // the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
-
-import { IndustryType, ComplianceCheckResponse } from "@shared/schema";
 
 // Industry-specific rules to check against
 const industryRules = {
@@ -78,52 +77,44 @@ export async function analyzeOutfitCompliance(
   
   // Otherwise use the actual OpenAI API
   try {
-    let messages: Array<{ role: string; content: any }> = [
-      {
-        role: "system",
-        content: `You are a dress code compliance expert for the ${industry} industry. 
-        Analyze the outfit and determine if it meets industry standards.
-        ${industry === "healthcare" 
-          ? "For healthcare, check for: scrubs/medical uniform, closed-toe shoes, ID badge, hair containment, no excessive jewelry, no long nails." 
-          : "For construction, check for: hard hat, high-visibility clothing, safety boots, eye protection, appropriate workwear, no loose clothing, no jewelry."}
-        
-        Provide a detailed analysis and recommendations to fix any compliance issues.
-        Respond with JSON in this format: 
-        {
-          "isCompliant": boolean,
-          "issues": [
-            { "type": "missing"|"incorrect"|"prohibited", "item": string, "description": string }
-          ],
-          "compliantItems": [
-            { "item": string, "description": string }
-          ],
-          "recommendations": [
-            { "title": string, "description": string }
-          ]
-        }`,
-      },
+    const systemContent = `You are a dress code compliance expert for the ${industry} industry. 
+    Analyze the outfit and determine if it meets industry standards.
+    ${industry === "healthcare" 
+      ? "For healthcare, check for: scrubs/medical uniform, closed-toe shoes, ID badge, hair containment, no excessive jewelry, no long nails." 
+      : "For construction, check for: hard hat, high-visibility clothing, safety boots, eye protection, appropriate workwear, no loose clothing, no jewelry."}
+    
+    Provide a detailed analysis and recommendations to fix any compliance issues.
+    Respond with JSON in this format: 
+    {
+      "isCompliant": boolean,
+      "issues": [
+        { "type": "missing"|"incorrect"|"prohibited", "item": string, "description": string }
+      ],
+      "compliantItems": [
+        { "item": string, "description": string }
+      ],
+      "recommendations": [
+        { "title": string, "description": string }
+      ]
+    }`;
+    
+    // Setup the messages array with proper typing for OpenAI API
+    const messages = [
+      { role: "system", content: systemContent }
     ];
 
     if (imageBase64) {
       messages.push({
-        role: "user",
+        role: "user", 
         content: [
-          {
-            type: "text",
-            text: `Analyze this ${industry} worker's outfit for dress code compliance:`,
-          },
-          {
-            type: "image_url",
-            image_url: {
-              url: `data:image/jpeg;base64,${imageBase64}`,
-            },
-          },
-        ],
+          { type: "text", text: `Analyze this ${industry} worker's outfit for dress code compliance:` },
+          { type: "image_url", image_url: { url: `data:image/jpeg;base64,${imageBase64}` } }
+        ]
       });
     } else if (description) {
       messages.push({
         role: "user",
-        content: `Analyze this ${industry} worker's outfit description for dress code compliance: ${description}`,
+        content: `Analyze this ${industry} worker's outfit description for dress code compliance: ${description}`
       });
     } else {
       throw new Error("Either image or description must be provided");

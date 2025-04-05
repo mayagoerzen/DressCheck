@@ -13,6 +13,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Validate request body
       const validatedData = insertComplianceCheckSchema.parse(req.body);
       
+      // Explicitly validate the industry parameter
+      if (!validatedData.industry || !['healthcare', 'construction'].includes(validatedData.industry)) {
+        return res.status(400).json({ 
+          message: "Invalid industry. Please select a valid industry (healthcare or construction)." 
+        });
+      }
+      
       // Ensure at least one of imageBase64 or description is provided
       if (!validatedData.imageBase64 && !validatedData.description) {
         return res.status(400).json({ 
@@ -32,10 +39,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const validatedResult = complianceCheckResponseSchema.parse(result);
 
         // Store compliance check in database
-        const complianceCheck = await storage.createComplianceCheck({
-          ...validatedData,
-          timestamp: new Date().toISOString(),
-        }, validatedResult);
+        const complianceCheck = await storage.createComplianceCheck(
+          {
+            industry: validatedData.industry,
+            imageBase64: validatedData.imageBase64 || null,
+            description: validatedData.description || null,
+            timestamp: new Date().toISOString(),
+          }, 
+          validatedResult
+        );
 
         return res.status(200).json(validatedResult);
       } catch (error) {

@@ -27,11 +27,22 @@ export const complianceChecks = pgTable("compliance_checks", {
   timestamp: text("timestamp").notNull(),
 });
 
-export const insertComplianceCheckSchema = createInsertSchema(complianceChecks).pick({
-  industry: true,
-  imageBase64: true,
-  description: true,
-});
+export const insertComplianceCheckSchema = createInsertSchema(complianceChecks)
+  .pick({
+    industry: true,
+    imageBase64: true,
+    description: true,
+  })
+  .extend({
+    // Override industry field validation to ensure it's one of our allowed types
+    industry: z.enum(["healthcare", "construction"], {
+      errorMap: (issue, ctx) => ({
+        message: "Invalid industry. Please select a valid industry (healthcare or construction)."
+      })
+    }),
+    // Add an optional timestamp field to be used when creating a compliance check
+    timestamp: z.string().optional()
+  });
 
 export const complianceCheckResponseSchema = z.object({
   isCompliant: z.boolean(),

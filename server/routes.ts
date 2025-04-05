@@ -31,8 +31,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Call OpenAI API to analyze outfit compliance
         const result = await analyzeOutfitCompliance(
           validatedData.industry as IndustryType,
-          validatedData.imageBase64,
-          validatedData.description
+          validatedData.imageBase64 || undefined,
+          validatedData.referenceImagesBase64, // Pass reference images
+          validatedData.description || undefined
         );
 
         // Parse the response with Zod to ensure correct format

@@ -1,4 +1,10 @@
 import OpenAI from "openai";
+import type { 
+  ChatCompletionMessageParam,
+  ChatCompletionSystemMessageParam,
+  ChatCompletionUserMessageParam,
+  ChatCompletionContentPart
+} from "openai/resources/chat/completions";
 import { IndustryType, ComplianceCheckResponse } from "@shared/schema";
 
 // the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
@@ -61,8 +67,9 @@ const USE_MOCK_DATA = process.env.USE_MOCK_DATA === "true" || true; // Default t
 
 export async function analyzeOutfitCompliance(
   industry: IndustryType,
-  imageBase64?: string,
-  description?: string
+  imageBase64?: string | null,
+  referenceImagesBase64?: string[],
+  description?: string | null
 ): Promise<ComplianceCheckResponse> {
   // Use mock data if enabled (or if OpenAI API key is missing)
   if (USE_MOCK_DATA || !process.env.OPENAI_API_KEY) {
@@ -99,18 +106,41 @@ export async function analyzeOutfitCompliance(
     }`;
     
     // Setup the messages array with proper typing for OpenAI API
-    const messages = [
+    const messages: ChatCompletionMessageParam[] = [
       { role: "system", content: systemContent }
     ];
 
     if (imageBase64) {
-      messages.push({
-        role: "user", 
-        content: [
-          { type: "text", text: `Analyze this ${industry} worker's outfit for dress code compliance:` },
-          { type: "image_url", image_url: { url: `data:image/jpeg;base64,${imageBase64}` } }
-        ]
-      });
+      // Start building the content array for the user message
+      const userContent: ChatCompletionContentPart[] = [
+        { type: "text", text: `Analyze this ${industry} worker's outfit for dress code compliance:` },
+        { 
+          type: "image_url", 
+          image_url: { url: `data:image/jpeg;base64,${imageBase64}` }
+        }
+      ];
+      
+      // Add reference images if provided
+      if (referenceImagesBase64 && referenceImagesBase64.length > 0) {
+        userContent.push({ 
+          type: "text", 
+          text: "Here are additional reference images from different angles to help with the assessment:" 
+        });
+        
+        for (const refImage of referenceImagesBase64) {
+          userContent.push({
+            type: "image_url",
+            image_url: { url: `data:image/jpeg;base64,${refImage}` }
+          });
+        }
+      }
+      
+      const userMessage: ChatCompletionUserMessageParam = {
+        role: "user",
+        content: userContent
+      };
+      
+      messages.push(userMessage);
     } else if (description) {
       messages.push({
         role: "user",

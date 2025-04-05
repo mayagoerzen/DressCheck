@@ -40,6 +40,8 @@ export const insertComplianceCheckSchema = createInsertSchema(complianceChecks)
         message: "Invalid industry. Please select a valid industry (healthcare or construction)."
       })
     }),
+    // Add reference images base64 array
+    referenceImagesBase64: z.array(z.string()).optional(),
     // Add an optional timestamp field to be used when creating a compliance check
     timestamp: z.string().optional()
   });

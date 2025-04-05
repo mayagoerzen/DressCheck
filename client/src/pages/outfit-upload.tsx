@@ -10,6 +10,7 @@ import { NavigationBreadcrumb } from "@/components/navigation-breadcrumb";
 import { IndustryType } from "@shared/schema";
 import { FaUserMd, FaHardHat, FaImage, FaAlignLeft, FaArrowRight } from "react-icons/fa";
 import { useImageUpload } from "@/hooks/use-image-upload";
+import { MultiImageUpload } from "@/components/multi-image-upload";
 
 export default function OutfitUpload() {
   const { industry } = useParams<{ industry: IndustryType }>();
@@ -31,6 +32,9 @@ export default function OutfitUpload() {
     maxSizeMB: 5,
     acceptedFormats: ['image/jpeg', 'image/png', 'image/heic']
   });
+  
+  // State for reference images
+  const [referenceImages, setReferenceImages] = useState<File[]>([]);
   
   // Validate industry from URL parameter
   useEffect(() => {
@@ -68,7 +72,7 @@ export default function OutfitUpload() {
   // API mutation for checking compliance
   const complianceMutation = useMutation({
     mutationFn: async () => {
-      // Convert image to base64 if it exists
+      // Convert primary image to base64 if it exists
       let imageBase64 = null;
       if (uploadedImage) {
         const reader = new FileReader();
@@ -83,9 +87,29 @@ export default function OutfitUpload() {
         });
       }
       
+      // Convert reference images to base64 array
+      let referenceImagesBase64: string[] = [];
+      if (referenceImages.length > 0) {
+        referenceImagesBase64 = await Promise.all(
+          referenceImages.map(async (file) => {
+            return new Promise<string>((resolve) => {
+              const reader = new FileReader();
+              reader.onload = (e) => {
+                const result = e.target?.result as string;
+                // Remove the data:image/jpeg;base64, prefix
+                const base64 = result.split(',')[1];
+                resolve(base64);
+              };
+              reader.readAsDataURL(file);
+            });
+          })
+        );
+      }
+      
       const requestData = {
         industry,
         imageBase64,
+        referenceImagesBase64: referenceImagesBase64.length > 0 ? referenceImagesBase64 : undefined,
         description: description || undefined
       };
       
@@ -173,6 +197,24 @@ export default function OutfitUpload() {
             value={description}
             onChange={handleDescriptionChange}
             className="w-full border border-gray-200 rounded-lg p-4 focus:ring-2 focus:ring-primary focus:border-primary transition-all"
+          />
+        </div>
+        
+        <div className="mt-8 pt-6 border-t border-gray-100">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center">
+              <FaImage className={`${iconColor} mr-2 text-lg`} />
+              <h3 className="text-lg font-medium">Reference Images (Optional)</h3>
+            </div>
+            <div className="text-sm text-gray-500">
+              Add photos from different angles for more accurate analysis
+            </div>
+          </div>
+          
+          <MultiImageUpload 
+            onChange={setReferenceImages} 
+            maxImages={4} 
+            label="Add Reference Image"
           />
         </div>
       </div>

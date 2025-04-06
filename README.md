@@ -36,7 +36,7 @@ Users can upload a photo or describe their outfit, select a workplace dress code
 ## Live Demo (Optional)
 
 If deployed, include your live link here:
-Check out the live app: https://your-replit-deployment-url.repl.co
+Check out the live app: [INSERT]
 
 ## Sample Use Cases
 

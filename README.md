@@ -36,7 +36,7 @@ Users can upload a photo or describe their outfit, select a workplace dress code
 ## Live Demo (Optional)
 
 If deployed, include your live link here:
-Check out the live app: [INSERT]
+Check out the live app: https://dress-check-mcgoerzen1.replit.app/ 
 
 ## Sample Use Cases
 

@@ -1,4 +1,4 @@
-# Workwear Compliance Checker
+# DressCheck
 
 A React-based web application that uses OpenAI's GPT-4o model to analyze whether a user's outfit is compliant with workplace dress codes — specifically for healthcare and construction industries.
 

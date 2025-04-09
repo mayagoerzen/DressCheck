@@ -21,7 +21,7 @@ Users can upload a photo or describe their outfit, select a workplace dress code
 ## How to Run Locally
 
 1. Clone this repository:
-   git clone https://github.com/your-username/workwear-checker.git
+   git clone [https://github.com/your-username/workwear-checker.git](https://github.com/mayagoerzen/DressCheck)
    cd workwear-checker
 
 2. Install dependencies:

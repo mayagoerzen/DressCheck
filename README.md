@@ -65,7 +65,6 @@ src/
 - Susan Wu
 - Marie Brauer
 - Lauren Bourgeois
-- Course: ENTI 674 
 
 ## License
 

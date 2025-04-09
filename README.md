@@ -33,9 +33,8 @@ Users can upload a photo or describe their outfit, select a workplace dress code
 4. Run the app locally:
    npm run dev
 
-## Live Demo (Optional)
+## Live Demo
 
-If deployed, include your live link here:
 Check out the live app: https://dress-check-mcgoerzen1.replit.app/ 
 
 ## Sample Use Cases
@@ -43,7 +42,7 @@ Check out the live app: https://dress-check-mcgoerzen1.replit.app/
 - Compliant: “High-visibility vest, steel-toe boots, hard hat — compliant with construction site PPE standards.”
 - Non-compliant: “Scrubs with exposed midriff and running shoes — does not meet healthcare uniform standards.”
 
-## Project Structure (Optional)
+## Project Structure
 
 src/
 ├── components/     # React components

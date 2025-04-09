@@ -45,11 +45,17 @@ Check out the live app: https://dress-check-mcgoerzen1.replit.app/
 ## Project Structure
 
 src/
+
 ├── components/     # React components
+
 ├── assets/         # Images and icons
+
 ├── api/            # OpenAI interaction logic
+
 ├── App.jsx         # Main app layout
+
 ├── index.html
+
 └── main.jsx
 
 ## Team Members
